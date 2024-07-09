@@ -1,119 +1,128 @@
 import sys
+
 from src.json_worker import WorkWithJson
 from src.parser import HH
 from src.vacancy import Vacancy
 
 
-class UserInteractive:
-    pass
-
-
 class UserInteractive(WorkWithJson):
     """
-    Класс, обеспечивающий взаимодействие с пользователем
+    Класс, обеспечивающий взаимодействие с пользователем.
+    Наследуется от WorkWithJson.
     """
 
-    def __init__(self, user_name: str):
+    def init(self, user_name: str):
         """
-        Инициализация пользователя и списка вакансий
-        :param user_name: Имя пользователя
+        Инициализация класса.
+
+        :param user_name: Имя пользователя.
         """
-        super().__init__()  # Корректная инициализация базового класса
-        self.user_name = user_name
-        self.vacancies_list = []
+        super().init()  # Вызов инициализации родительского класса.
+        self.user_name = user_name  # Сохранение имени пользователя.
+        self.vacancies_list = []  # Инициализация списка вакансий.
 
     @staticmethod
     def get_vacancies_list(keyword: str):
         """
-        Получение с сайта HH списка вакансий по ключевому слову
-        :param keyword: Ключевое слово для поиска вакансий
-        :return: Список вакансий
+        Получение с сайта HH списка вакансий по ключевому слову.
+
+        :param keyword: Ключевое слово для поиска вакансий.
+        :return: Список вакансий.
         """
         hh = HH(keyword)
         return hh.load_vacancies()
 
     def get_vacancies_list_from_file(self) -> list[dict]:
         """
-        Получение списка вакансий из файла
-        :return: Список вакансий
+        Чтение списка вакансий из файла.
+
+        :return: Список вакансий.
         """
-        self.vacancies_list = []
-        for vac in self.read_file():  # Чтение из файла JSON для текущего экземпляра
+        work_file = WorkWithJson()
+        self.vacancies_list = []  # Очистка текущего списка вакансий.
+        for vac in work_file.read_file():
             self.vacancies_list.append(vac)
         return self.vacancies_list
 
     def get_top_n_for_salary(self, n: int) -> list[dict]:
         """
-        Получение топ N вакансий по уровню зарплат, отсортированных по убыванию.
-        :param n: Количество вакансий для вывода
-        :return: Список топ N вакансий
+        Получение топ N вакансий с самой высокой зарплатой.
+
+        :param n: Количество вакансий для отображения.
+        :return: Список топ N вакансий по уровню зарплаты.
         """
-        sorted_vacancies = sorted(self.vacancies_list, key=lambda x: x['salary'], reverse=True)
-        return sorted_vacancies[:n]
+        vac_filter = []
+        for vac in self.vacancies_list:
+            vac_filter.append(vac)
+
+        # Сортировка вакансий по зарплате (убывание).
+        sort_by_salary = sorted(vac_filter, key=lambda x: x.salary, reverse=True)
+        return sort_by_salary[:n]
 
     def get_vacancy_from_keywords(self) -> list[dict]:
         """
-        Получение списка вакансий по ключевому слову, введенному пользователем.
-        :return: Список вакансий, удовлетворяющих ключевому слову
+        Поиск вакансий по ключевому слову, введенному пользователем.
+
+        :return: Список вакансий, соответствующих ключевому слову.
         """
-        keywords = input("Пожалуйста, введите ключевое слово для поиска вакансий: ")
+        keywords = input("Введите ключевое слово:  ")
         print()
         res = []
         for vacancy in self.vacancies_list:
-            if vacancy['name'].find(keywords) != -1:
+            if vacancy.name.find(keywords) != -1:
                 res.append(vacancy)
+
         return res
 
+    @staticmethod
     def user_interaction(self):
         """
         Функция для взаимодействия с пользователем.
+
+        Включает запросы к пользователю о его имени, ключевом слове для
+        поиска вакансий и дальнейшие действия.
+
+        :param self: Ссылка на текущий объект класса.
         :return: None
         """
-        # Приветствие пользователя
-        print("Здравствуйте, пользователь!")
-        user_name = input("Как вы предпочитаете, чтобы вас называли? ")
-        self.user_name = user_name
+        print("Привет")
+        user_name = input("Как ваше имя?  ")
+        user = UserInteractive(user_name)
 
-        # Запрос ключевого слова для поиска вакансий
-        keyword = input("Пожалуйста, введите ключевое слово для поиска вакансий на HH: ")
+        keyword = input("Введите запрос (ключевое слово для поиска вакансий на HH): ")
 
-        # Сохранение полученного списка вакансий в файл
-        self.save_file(self.get_vacancies_list(keyword))
+        # Сохранение списка вакансий в файл.
+        user.save_file(user.get_vacancies_list(keyword))
 
-        # Опция удаления файла с вакансиями
-        YesNo = input("\nСписок вакансий сохранен.\nХотите ли вы удалить файл с найденными вакансиями? "
-                      "\n(Д/д, Y/y - удалить и выйти, Н/н, N/n - продолжить работу): ")
-        if YesNo in ["Y", "y", "Д", "д"]:
-            self.delete_file()
+        YesNo = input("\nФайл с вакансиями сформирован.\nУдалить файл с найденными вакансиями? "
+                      "\nЗа удалением файла следует выход из программы!!!\n"
+                      "(Д/д, Y/y - удаляем и выходим, Н/н, N/n - продолжаем работу): ")
+        if YesNo == "Y" or YesNo == "y" or YesNo == "Д" or YesNo == "д":
+            user.delete_file()
             sys.exit()
 
-        # Запрос количества вакансий для вывода на экран
-        n = int(input("\nСколько вакансий вы хотите увидеть на экране? Пожалуйста, введите число: "))
+        n = int(input("\nКакое количество вакансий вывести?:  "))
         print()
 
-        # Получение списка вакансий из файла и вывод топ N вакансий по зарплате
-        self.get_vacancies_list_from_file()
+        user.get_vacancies_list_from_file()  # Чтение вакансий из файла.
 
+        # Преобразование вакансий в объекты Vacancy.
         new_vac_list = []
-        for vacancy in self.vacancies_list:
+        for vacancy in user.vacancies_list:
             vac = Vacancy.new_vacancy(vacancy)
             new_vac_list.append(vac)
 
-        self.vacancies_list = new_vac_list
-        top_vacancies = self.get_top_n_for_salary(n)
-        for vacancy in top_vacancies:
+        user.vacancies_list = new_vac_list
+
+        # Вывод топ N вакансий по зарплате.
+        user.get_top_n_for_salary(n)
+        for vacancy in user.get_top_n_for_salary(n):
             print(vacancy)
             print()
 
         print("------------------------------------------------------------------")
 
-        # Получение списка вакансий по ключевому слову и их вывод на экран
-        keyword_vacancies = self.get_vacancy_from_keywords()
-        for vacancy in keyword_vacancies:
+        # Вывод вакансий, найденных по ключевому слову.
+        for vacancy in user.get_vacancy_from_keywords():
             print(vacancy)
             print()
-
-    if __name__ == "__main__":
-        user_interface = UserInteractive("")
-        user_interface.user_interaction()
-
