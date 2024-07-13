@@ -1,17 +1,16 @@
 class Vacancy:
     """
-    Класс для работы с вакансиями.
+    Класс для работы с вакансиями
     """
 
     def __init__(self, name: str, area: str, salary: int, url: str, snippet: str):
         """
-        Инициализация объекта Vacancy.
-
-        :param name: Название вакансии.
-        :param area: Область (город, регион) вакансии.
-        :param salary: Зарплата.
-        :param url: URL вакансии.
-        :param snippet: Требования к вакансии.
+        Инициализирует объект Vacancy с атрибутами имени, города, зарплаты, ссылки и требований
+        :param name: Название вакансии
+        :param area: Город
+        :param salary: Зарплата
+        :param url: Ссылка на вакансию
+        :param snippet: Краткое описание требований
         """
         self.name = self.__validation_data(name)
         self.area = self.__validation_data(area)
@@ -21,70 +20,51 @@ class Vacancy:
 
     def __str__(self):
         """
-        Возвращает строковое представление объекта Vacancy.
-
-        :return: Строка с информацией о вакансии.
+        Форматирует объект Vacancy в строку для удобного вывода
+        :return: Отформатированная строка
         """
         return (f"{self.name}\n"
                 f"Город: {self.area}\n"
                 f"Зарплата: {self.salary if self.salary else 'Не указана'}\n"
-                f"URL: {self.url}\n"
+                f"E-mail: {self.url}\n"
                 f"Требования: {self.snippet}\n")
 
     def __lt__(self, other):
         """
-        Метод для сравнения вакансий по зарплате.
-
-        :param other: Другая вакансия для сравнения.
-        :return: True, если зарплата текущей вакансии меньше зарплаты другой вакансии, иначе False.
+        Сравнивает текущую вакансию с другой по зарплате
+        :param other: Другая вакансия
+        :return: True если текущая вакансия имеет зарплату меньше, чем у другой вакансии
         """
         if not self.salary:
-            return 0  # "Не указана"
+            return False  # "Не указана"
         elif not other.salary:
-            return 0  # "Не указана"
-        elif self.salary < other.salary:
-            return True
-        else:
-            return False
+            return False  # "Не указана" у другой вакансии
+        return self.salary < other.salary
 
     @staticmethod
     def __validation_data(data):
         """
-        Метод валидации данных: если данные отсутствуют, возвращается текст "Отсутствует".
-
-        :param data: Данные для валидации.
-        :return: Валидация данных или текст "Отсутствует", если данные отсутствуют.
+        Метод валидации данных: если данные отстутствуют, возвращается текст "Отсутствует"
+        :param data: Данные для валидации
+        :return: Валидационные данные или строка "Отсутствует"
         """
-        if data:
-            return data
-        else:
-            return "Отсутствует"
+        return data if data else "Отсутствует"
 
     @classmethod
     def new_vacancy(cls, vacancy: dict):
         """
-        Метод создания новой пользовательской вакансии из выгруженных с HH вакансий.
-
-        :param vacancy: Словарь с данными вакансии, полученными из API HH.
-        :return: Новый экземпляр Vacancy.
+        Метод создания новой пользовательской вакансии из выгруженных с HH вакансий
+        :param vacancy: Словарь, содержащий данные о вакансии
+        :return: Экземпляр класса Vacancy
         """
         name = vacancy.get("name")
-        area = vacancy.get("area").get("name")
+        area = vacancy.get("area", {}).get("name")
 
-        if vacancy.get("salary"):
-            if vacancy.get("salary").get("from"):
-                salary = int(vacancy.get("salary").get("from"))
-            else:
-                salary = 0
-        else:
-            salary = 0  # "Не указана"
+        # Определение зарплаты
+        salary_dict = vacancy.get("salary")
+        salary = int(salary_dict.get("from")) if salary_dict and salary_dict.get("from") else 0
 
         url = vacancy.get("url")
-
-        if vacancy.get("snippet").get("responsibility") is not None:
-            snippet = vacancy.get("snippet").get("responsibility")
-        else:
-            snippet = "Не указаны"
+        snippet = vacancy.get("snippet", {}).get("responsibility", "Не указаны")
 
         return cls(name, area, salary, url, snippet)
-

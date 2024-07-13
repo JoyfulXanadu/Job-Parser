@@ -4,57 +4,49 @@ import requests
 
 class Parser(ABC):
     """
-    Абстрактный класс Parser, который определяет метод для загрузки вакансий.
+    Класс Parser является родительским классом, который необходимо реализовать.
+    Все парсеры должны наследовать этот класс и реализовывать его методы.
     """
 
     @abstractmethod
     def load_vacancies(self):
         """
-        Загружает вакансии.
-
-        :return: Список вакансий.
+        Абстрактный метод для загрузки вакансий.
+        Необходимо реализовать в каждом классе-наследнике.
         """
         pass
 
 
 class HH(Parser):
     """
-    Класс для работы с API HeadHunter (HH).
-
+    Класс для работы с API HeadHunter.
     """
 
-    def init(self, keyword: str):
+    def __init__(self, keyword: str):
         """
-        Инициализация класса HH.
+        Инициализация объекта HH.
 
         :param keyword: Ключевое слово для поиска вакансий.
         """
-        self.url = 'https://api.hh.ru/vacancies'  # URL API для вакансий HeadHunter
-        self.headers = {'User-Agent': 'HH-User-Agent'}  # Заголовки для запроса
-        self.params = {'text': keyword, 'page': 0, 'per_page': 100}  # Параметры запроса
+        self.url = 'https://api.hh.ru/vacancies'
+        self.headers = {'User-Agent': 'HH-User-Agent'}
+        self.params = {'text': keyword, 'page': 0, 'per_page': 100}
 
     def load_vacancies(self) -> list[dict]:
         """
-        Загружает вакансии с HeadHunter API.
+        Загрузка вакансий с HeadHunter API.
 
-        :return: Список вакансий (словарей).
+        :return: Список словарей с информацией о вакансиях.
         """
-        vacancies = []  # Список для сохранения вакансий
+        vacancies = []
 
-        # Запросы продолжаются пока не будет достигнута 20-я страница результатов
+        # Цикл для перебора страниц с вакансиями.
         while self.params.get('page') != 20:
-            # Выполнение GET-запроса к API
+            # Отправка GET-запроса к API
             response = requests.get(self.url, headers=self.headers, params=self.params)
-
-            # Проверка успешности запроса
-            if response.status_code == 200:
-                # Парсинг JSON-ответа и добавление вакансий в список
-                items = response.json()['items']
-                vacancies.extend(items)
-
-                # Переход на следующую страницу результатов
-                self.params['page'] += 1
-            else:
-                break  # Прерывание цикла в случае ошибки запроса
+            # Парсинг ответа в формат JSON и добавление вакансий в список
+            vacancies.extend(response.json().get('items', []))
+            # Переход на следующую страницу
+            self.params['page'] += 1
 
         return vacancies
