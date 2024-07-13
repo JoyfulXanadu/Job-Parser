@@ -8,11 +8,13 @@ pytest
 
 
 ``markdown
+# Job-Parser
 
-Job-Parser
 Job-Parser is a project for parsing job vacancies and providing essential interactions with job listings.
 
-Структура проекта
+## Project Structure
+
+```
 Job-Parser/
 ├── data
 │   ├── __init__.py
@@ -29,6 +31,9 @@ Job-Parser/
 ├── .gitignore
 ├── main.py
 ├── README.md
+```
+
+
 Запуск проекта:
 Клонировать репозиторий:
 git clone https://github.com/JoyfulXanadu/Job-Parser.git
